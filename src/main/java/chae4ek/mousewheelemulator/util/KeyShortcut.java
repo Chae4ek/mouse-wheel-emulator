@@ -5,9 +5,9 @@ public class KeyShortcut {
   public static final int MAX_LENGTH = 32; // sizeof(int)
 
   // regex: [1*00*1*]
-  // the first '1's are keys, the last '1's are mouse buttons
+  // rule: the first '1's are keys, the last '1's are mouse buttons
   private final int[] keyCombination;
-  // the same rule: 0x[1*0*1*]
+  // the same rule for regex: 0x[1*0*1*]
   private int unpressedKeysMask;
 
   public KeyShortcut(final int[] nativeKeys, final int[] nativeButtons) {
@@ -15,7 +15,8 @@ public class KeyShortcut {
       throw new IllegalArgumentException("You must define key(s) or/and mouse button(s)");
     }
     if (nativeKeys.length + nativeButtons.length > MAX_LENGTH) {
-      throw new IllegalArgumentException("The max length of the keyboard shortcut is 32");
+      throw new IllegalArgumentException(
+          "The max length of the keyboard shortcut is " + MAX_LENGTH);
     }
 
     keyCombination = new int[nativeKeys.length + nativeButtons.length + 1];

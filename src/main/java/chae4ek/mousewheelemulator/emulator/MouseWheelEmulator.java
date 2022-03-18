@@ -2,30 +2,16 @@ package chae4ek.mousewheelemulator.emulator;
 
 import chae4ek.mousewheelemulator.emulator.scrollrules.ScrollRule;
 import chae4ek.mousewheelemulator.util.KeyShortcut;
+import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import com.github.kwhat.jnativehook.mouse.NativeMouseEvent;
 import com.github.kwhat.jnativehook.mouse.NativeMouseInputListener;
+import com.github.kwhat.jnativehook.mouse.NativeMouseWheelEvent;
 import com.github.kwhat.jnativehook.mouse.NativeMouseWheelListener;
-import java.awt.AWTException;
-import java.awt.Robot;
 
 public class MouseWheelEmulator
     implements NativeMouseWheelListener, NativeKeyListener, NativeMouseInputListener {
-
-  /**
-   * @deprecated to remove
-   */
-  @Deprecated private static final Robot robot;
-
-  static {
-    try {
-      robot = new Robot();
-    } catch (final AWTException e) {
-      e.printStackTrace();
-      throw new RuntimeException("Robot is not supported");
-    }
-  }
 
   private KeyShortcut keyShortcut;
 
@@ -66,13 +52,11 @@ public class MouseWheelEmulator
   @Override
   public void nativeKeyPressed(final NativeKeyEvent nativeEvent) {
     keyShortcut.pressKey(nativeEvent.getKeyCode());
-    assertEmulation();
   }
 
   @Override
   public void nativeKeyReleased(final NativeKeyEvent nativeEvent) {
     keyShortcut.releaseKey(nativeEvent.getKeyCode());
-    assertEmulation();
   }
 
   @Override
@@ -81,13 +65,11 @@ public class MouseWheelEmulator
   @Override
   public void nativeMousePressed(final NativeMouseEvent nativeEvent) {
     keyShortcut.pressButton(nativeEvent.getButton());
-    assertEmulation();
   }
 
   @Override
   public void nativeMouseReleased(final NativeMouseEvent nativeEvent) {
     keyShortcut.releaseButton(nativeEvent.getButton());
-    assertEmulation();
   }
 
   @Override
@@ -100,12 +82,12 @@ public class MouseWheelEmulator
     emulateWheel(nativeEvent);
   }
 
-  private void assertEmulation() {
+  private void assertEmulation(final int x, final int y) {
     if (keyShortcut.isAllPressed()) {
       if (!emulateWheel) {
         emulateWheel = true;
-        startX = lastX;
-        startY = lastY;
+        startX = lastX = x;
+        startY = lastY = y;
       }
     } else emulateWheel = false;
   }
@@ -113,6 +95,7 @@ public class MouseWheelEmulator
   private void emulateWheel(final NativeMouseEvent nativeEvent) {
     final int x = nativeEvent.getX();
     final int y = nativeEvent.getY();
+    assertEmulation(x, y);
     if (emulateWheel) {
       final int diffLast =
           scrollRule.getScrollAmountToStartPoint(
@@ -121,24 +104,20 @@ public class MouseWheelEmulator
           scrollRule.getScrollAmountToStartPoint(startX, startY, x, y, pixelThresholdToScroll);
       if (diffLast != diffNew) {
         final int amount = diffLast - diffNew;
-        robot.mouseWheel(amount);
-        // TODO: it doesn't work correctly on Linux
-        //  issue: https://github.com/kwhat/jnativehook/issues/397
-        /*final NativeMouseWheelEvent event =
+        GlobalScreen.postNativeEvent(
             new NativeMouseWheelEvent(
                 NativeMouseEvent.NATIVE_MOUSE_WHEEL,
                 amount > 0 ? NativeMouseEvent.BUTTON5_MASK : NativeMouseEvent.BUTTON4_MASK,
-                startX,
-                startY,
+                x,
+                y,
                 1,
-                NativeMouseWheelEvent.WHEEL_UNIT_SCROLL,
+                NativeMouseWheelEvent.WHEEL_BLOCK_SCROLL,
                 1,
                 amount > 0 ? 1 : -1,
-                NativeMouseWheelEvent.WHEEL_VERTICAL_DIRECTION);
-        GlobalScreen.postNativeEvent(event);*/
+                NativeMouseWheelEvent.WHEEL_VERTICAL_DIRECTION));
       }
+      lastX = x;
+      lastY = y;
     }
-    lastX = x;
-    lastY = y;
   }
 }

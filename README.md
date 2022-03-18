@@ -11,6 +11,7 @@ uses [this library](https://github.com/kwhat/jnativehook)).
 - [x] You can configure the mouse movement threshold in pixels to control the scroll sensitivity.
 - [x] You can set a **scrolling rule** that defines which axes are used, which direction is scrolled
   up or down, or even scrolling from a point as from the center of circle.
+- [x] You can use it headless since jnativehook library is AWT independent.
 
 ## Running
 
